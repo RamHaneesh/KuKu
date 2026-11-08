@@ -20,13 +20,13 @@ st.title(TITLE)
 episodes = sorted(PACK.glob("episode-*.txt"))
 if not episodes:
     episodes = sorted((Path(__file__).resolve().parent / "demo").glob("*.txt"))
-left, right = st.columns(2)
-with left:
-    selected = st.selectbox("Episode", episodes, disabled=not episodes,
+if len(episodes) > 1:
+    selected = st.selectbox("Episode", episodes,
                             format_func=lambda p: ("Original demo · Station inspector" if p.parent.name == "demo"
                                                    else f"Episode {int(p.name.split('-')[1])}"))
-with right:
-    uploaded = st.file_uploader("Upload a screenplay to use instead", type=["txt"])
+else:
+    selected = next(iter(episodes), None)
+uploaded = st.file_uploader("Upload a screenplay", type=["txt"])
 mode = st.radio("Scoring mode", ["HEURISTIC_OFFLINE", "LLM_ENHANCED"], horizontal=True)
 if uploaded:
     data, name = uploaded.getvalue(), uploaded.name
