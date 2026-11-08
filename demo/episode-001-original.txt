@@ -1,0 +1,26 @@
+EPISODE NUMBER: Episode 1
+EPISODE LOGLINE: A station inspector has thirty seconds to stop a train after someone swaps its destination board.
+
+SCENE 01
+Scene start: 00:00.00
+Scene end: 00:32.00
+
+**INSPECTOR (Panicked):**
+Start: (00:00.00) | End: (00:02.50)
+"Stop that train!"
+
+**ACTION:**
+Start: (00:02.50) | End: (00:11.00)
+The inspector lunges for the brake. Behind her, the destination board flips from Central to Quarry.
+
+**DRIVER (Shocked):**
+Start: (00:11.00) | End: (00:20.00)
+"The quarry line ends at the old bridge. They took it down last winter."
+
+**ACTION:**
+Start: (00:20.00) | End: (00:29.00)
+Through the cab window she sees a second engine on their track.
+
+**INSPECTOR (Desperate):**
+Start: (00:29.00) | End: (00:32.00)
+"Then who's driving the train coming toward us?"
