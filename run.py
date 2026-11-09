@@ -10,7 +10,8 @@ from pathlib import Path
 from time import perf_counter
 
 from src.parser import parse_screenplay
-from src.ranker import build_promo, enhance_episode, posting_list
+from src.gemini import enhance_episode
+from src.ranker import build_promo, posting_list
 from src.windows import generate_windows, shortlist_windows
 
 

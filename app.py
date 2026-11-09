@@ -9,7 +9,8 @@ import streamlit as st
 
 from run import load_project_env
 from src.parser import parse_text
-from src.ranker import DEFAULT_GEMINI_MODEL, build_promo, enhance_episode, posting_list, timestamp
+from src.gemini import DEFAULT_GEMINI_MODEL, enhance_episode
+from src.ranker import build_promo, posting_list, timestamp
 from src.windows import generate_windows, shortlist_windows
 
 
