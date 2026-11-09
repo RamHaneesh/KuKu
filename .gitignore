@@ -6,3 +6,9 @@ outputs_llm_test/
 .venv/
 __pycache__/
 I Married a Broken Soldier. He was a Duke/
+outputs/
+outputs_*/
+SOLUTION_DOC.md
+solution_doc.pdf
+tmp/
+tmp*/

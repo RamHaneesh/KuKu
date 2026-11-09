@@ -42,7 +42,7 @@ The offline full-pack run evaluated **34,065** eligible windows across **50 epis
 
 | File | What it contains |
 | --- | --- |
-| [all_promos.json](outputs/all_promos.json) | All 525 shortlisted promos, covering all 50 episodes. Each entry includes timestamps, duration, hook, cliffhanger, rationale, score and scoring mode. |
-| [top_ranked_promos.csv](outputs/top_ranked_promos.csv) | The show's 20 recommended promos to post first, in posting order, with a ranking reason for each. |
+| `all_promos.json` | All 525 shortlisted promos, covering all 50 episodes. Each entry includes timestamps, duration, hook, cliffhanger, rationale, score and scoring mode. |
+| `top_ranked_promos.csv` | The show's 20 recommended promos to post first, in posting order, with a ranking reason for each. |
 
-See the [solution document](SOLUTION_DOC.md) for the assumptions, ranking example and quality review.
+The full outputs and solution document contain excerpts from the private input pack and are shared separately with the evaluators.
