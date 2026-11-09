@@ -60,6 +60,7 @@ if not candidates:
 
 pairs = [build_promo(episode, candidate) for candidate in candidates]
 promos = [promo for promo, _ in pairs]
+offline_scores = {(p["segment_start"], p["segment_end"]): p["composite_score"] for p in promos}
 if mode == "LLM_ENHANCED":
     load_project_env()
     key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -91,8 +92,8 @@ for promo in posting_list(promos, limit=3):
         heading, score = st.columns([4, 1])
         heading.subheader(f"{promo['segment_start']} – {promo['segment_end']}")
         heading.caption(f"{promo['duration_sec']:.2f} seconds · {promo['mode']}")
-        reviewed = promo["mode"] == "LLM_ENHANCED" and "offline_score" in promo
-        baseline = promo.get("offline_score", promo["composite_score"])
+        reviewed = promo["mode"] == "LLM_ENHANCED"
+        baseline = offline_scores[promo["segment_start"], promo["segment_end"]]
         score.badge(f"Offline Score {baseline:g}/10", color="gray")
         if reviewed:
             score.badge(f"Gemini Score {promo['composite_score']:g}/10", color="green")
