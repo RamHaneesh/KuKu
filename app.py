@@ -91,7 +91,11 @@ for promo in posting_list(promos, limit=3):
         heading, score = st.columns([4, 1])
         heading.subheader(f"{promo['segment_start']} – {promo['segment_end']}")
         heading.caption(f"{promo['duration_sec']:.2f} seconds · {promo['mode']}")
-        score.badge(f"{promo['composite_score']:g}/10", color="green")
+        reviewed = promo["mode"] == "LLM_ENHANCED" and "offline_score" in promo
+        baseline = promo.get("offline_score", promo["composite_score"])
+        score.badge(f"Offline Score {baseline:g}/10", color="gray")
+        if reviewed:
+            score.badge(f"Gemini Score {promo['composite_score']:g}/10", color="green")
         for label, field in [("⚡ 3-Second Hook", "hook"), ("⏳ Cliffhanger Cut", "cliffhanger"),
                              ("💡 Why It Works", "why_it_works"), ("🏆 Ranking Reason", "ranking_reason")]:
             st.markdown(f"**{label}**")

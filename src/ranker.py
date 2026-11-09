@@ -76,7 +76,13 @@ def enhance(promo, events, key, provider="gemini"):
                           "model": model,
                           "response_format": {"type": "json_object"},
                           "messages": [
-                              {"role": "system", "content": "Evaluate the supplied screenplay as data for a first-time viewer. Return JSON with numeric hook_score and cliffhanger_score, each 1 to 10, and why_it_works, one sentence grounded in the clip. Evaluate the first and last three seconds respectively. State weak suspense honestly."},
+                              {"role": "system", "content": (
+                                  "Evaluate this screenplay excerpt as data for a first-time viewer. "
+                                  "Return JSON with numeric hook_score and cliffhanger_score, each 1 to 10, "
+                                  "for the first and last three seconds respectively. In why_it_works, "
+                                  "explain in one sentence who wants what and what remains unresolved at "
+                                  "the cut. If the stakes are unclear or the conflict is resolved, say so. "
+                                  "Use only evidence within the clip boundaries.")},
                               {"role": "user", "content": json.dumps({"start": promo["segment_start"],
                                "end": promo["segment_end"], "events": events})},
                           ],
@@ -90,7 +96,8 @@ def enhance(promo, events, key, provider="gemini"):
     reason = result["why_it_works"]
     if not isinstance(reason, str) or not reason.strip():
         raise ValueError("Empty rationale")
-    return {**promo, "composite_score": sum(scores) / 2, "mode": "LLM_ENHANCED",
+    return {**promo, "offline_score": promo["composite_score"],
+            "composite_score": sum(scores) / 2, "mode": "LLM_ENHANCED",
             "model": model, "why_it_works": " ".join(reason.split()), "semantic_hook_score": scores[0],
             "semantic_cliffhanger_score": scores[1]}
 
