@@ -3,12 +3,13 @@
 import hashlib
 import os
 from pathlib import Path
+from urllib.error import HTTPError
 
 import streamlit as st
 
 from run import load_project_env
 from src.parser import parse_text
-from src.ranker import build_promo, enhance, posting_list, timestamp
+from src.ranker import DEFAULT_GEMINI_MODEL, build_promo, enhance_episode, posting_list, timestamp
 from src.windows import generate_windows, shortlist_windows
 
 
@@ -60,18 +61,20 @@ offline_scores = {(p["segment_start"], p["segment_end"]): p["composite_score"] f
 if mode == "LLM_ENHANCED":
     load_project_env()
     key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    identity = (hashlib.sha256(data).hexdigest(), os.getenv("GEMINI_MODEL"))
+    identity = (hashlib.sha256(data).hexdigest(), DEFAULT_GEMINI_MODEL)
     if key and st.button("Score shortlisted clips with Gemini", type="primary"):
         with st.spinner(f"Scoring {len(pairs)} shortlisted clips…"):
-            enhanced = []
             issue = None
-            for promo, events in pairs:
-                try:
-                    enhanced.append(enhance(promo, events, key))
-                except (OSError, ValueError, KeyError, IndexError, TypeError) as error:
-                    issue = f"Gemini scoring stopped ({type(error).__name__}). Remaining clips use offline scores."
-                    break
-            st.session_state.gemini_run = (identity, enhanced + promos[len(enhanced):], issue)
+            try:
+                promos = enhance_episode(pairs, key, model=DEFAULT_GEMINI_MODEL)
+            except (OSError, ValueError, KeyError, IndexError, TypeError) as error:
+                if isinstance(error, HTTPError) and error.code == 429:
+                    issue = ("**HTTP 429: Too Many Requests.** This project reached a Gemini "
+                             "usage limit. Try again after the limit resets.")
+                else:
+                    issue = "Gemini couldn’t finish scoring this episode."
+                issue += " Showing offline scores."
+            st.session_state.gemini_run = (identity, promos, issue)
     saved = st.session_state.get("gemini_run")
     if saved and saved[0] == identity:
         promos = saved[1]

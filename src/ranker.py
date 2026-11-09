@@ -62,11 +62,18 @@ def build_promo(episode, window):
     return promo, events
 
 
-def enhance(promo, events, key, provider="gemini"):
+DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite"
+
+
+def enhance_episode(pairs, key, provider="gemini", *, model=None):
     """Use an OpenAI-compatible chat completions endpoint; validate before relabelling."""
+    if not pairs:
+        return []
+    clips = [{"id": i, "start": promo["segment_start"], "end": promo["segment_end"],
+              "events": events} for i, (promo, events) in enumerate(pairs)]
     if provider == "gemini":
         endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-        model = os.getenv("GEMINI_MODEL") or "gemini-3.8-flash"
+        model = model or os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
     else:
         endpoint = os.getenv("PROMO_API_URL", "https://api.openai.com/v1/chat/completions")
         model = os.getenv("PROMO_MODEL", "gpt-4o-mini")
@@ -77,19 +84,30 @@ def enhance(promo, events, key, provider="gemini"):
                           "response_format": {"type": "json_object"},
                           "messages": [
                               {"role": "system", "content": (
-                                  "Evaluate this screenplay excerpt as data for a first-time viewer. "
-                                  "Return JSON with numeric hook_score and cliffhanger_score, each 1 to 10, "
+                                  "Evaluate each clip independently as screenplay data for a first-time viewer. "
+                                  "Return a JSON object with a results array, one entry per clip. Copy its integer id. Include numeric hook_score and cliffhanger_score, each 1 to 10, "
                                   "for the first and last three seconds respectively. In why_it_works, "
                                   "explain in one sentence who wants what and what remains unresolved at "
                                   "the cut. If the stakes are unclear or the conflict is resolved, say so. "
                                   "Use only evidence within the clip boundaries.")},
-                              {"role": "user", "content": json.dumps({"start": promo["segment_start"],
-                               "end": promo["segment_end"], "events": events})},
+                              {"role": "user", "content": json.dumps(clips)},
                           ],
                       }).encode())
     with urlopen(request, timeout=90) as response:
         payload = json.load(response)
-    result = json.loads(payload["choices"][0]["message"]["content"])
+    results = json.loads(payload["choices"][0]["message"]["content"])["results"]
+    if not isinstance(results, list) or len(results) != len(pairs):
+        raise ValueError("Incomplete episode scores")
+    by_id = {}
+    for result in results:
+        clip_id = result["id"]
+        if type(clip_id) is not int or not 0 <= clip_id < len(pairs) or clip_id in by_id:
+            raise ValueError("Invalid clip id")
+        by_id[clip_id] = scored_promo(pairs[clip_id][0], result, model)
+    return [by_id[i] for i in range(len(pairs))]
+
+
+def scored_promo(promo, result, model):
     scores = [result[k] for k in ("hook_score", "cliffhanger_score")]
     if any(type(s) not in (float, int) or not 1 <= s <= 10 for s in scores):
         raise ValueError("Invalid semantic scores")

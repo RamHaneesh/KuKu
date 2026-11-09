@@ -10,7 +10,7 @@ from pathlib import Path
 from time import perf_counter
 
 from src.parser import parse_screenplay
-from src.ranker import build_promo, enhance, posting_list
+from src.ranker import build_promo, enhance_episode, posting_list
 from src.windows import generate_windows, shortlist_windows
 
 
@@ -88,18 +88,18 @@ def main():
         windows = generate_windows(episode["events"])
         eligible += len(windows)
         survivors += sum(w["composite_score"] > 0 for w in windows)
-        for window in shortlist_windows(windows):
-            promo, events = build_promo(episode, window)
-            if key:
-                model_calls += 1
-                try:
-                    promo = enhance(promo, events, key, args.provider)
-                    enhanced += 1
-                except (OSError, ValueError, KeyError, IndexError, TypeError) as error:
-                    logging.warning("Model call failed (%s); using offline scoring for the rest of the run",
-                                    type(error).__name__)
-                    key = None
-            promos.append(promo)
+        pairs = [build_promo(episode, window) for window in shortlist_windows(windows)]
+        episode_promos = [promo for promo, _ in pairs]
+        if key and pairs:
+            model_calls += 1
+            try:
+                episode_promos = enhance_episode(pairs, key, args.provider)
+                enhanced += len(episode_promos)
+            except (OSError, ValueError, KeyError, IndexError, TypeError) as error:
+                logging.warning("Model call failed (%s); using offline scoring for the rest of the run",
+                                type(error).__name__)
+                key = None
+        promos.extend(episode_promos)
     ranked = posting_list(promos)
     write_outputs(args.output_dir, promos, ranked)
     if args.input:
